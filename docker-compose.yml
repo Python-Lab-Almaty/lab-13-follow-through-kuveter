@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  lab-analysis:
+    build: .
+    container_name: lab13-analysis
+    environment:
+      - STUDENT_ID=${STUDENT_ID:-unknown}
+      - LAB_NUMBER=13
+    volumes:
+      - ./:/app/workspace  # Пробрасываем ВЕСЬ репозиторий в контейнер
+    working_dir: /app/workspace
+    command: python3 analysis.py
