@@ -8,7 +8,7 @@ import json
 # ----------------------------
 # 🟢 КОНСТАНТЫ
 # ----------------------------
-WIDTH, HEIGHT = 1200, 800
+WIDTH, HEIGHT = 1400, 900
 
 # 🟢 ИНИЦИАЛИЗАЦИЯ ЛОГА
 log = []
@@ -156,6 +156,7 @@ dynamic_obstacles = []
 # ----------------------------
 steps = 0
 penalties = 0
+lifes = 3
 
 # ----------------------------
 # 🟢 СКОРОСТЬ
@@ -271,7 +272,7 @@ def draw_all():
     score_drawer.goto(0, -HEIGHT//2 + 40)
     score = steps - penalties
     score_drawer.clear()
-    score_drawer.write(f"Steps: {steps} | Penalties: {penalties} | Score: {score}",
+    score_drawer.write(f"Steps: {steps} | Lifes: {lifes} | Penalties: {penalties} | Score: {score}",
                        align="center", font=("Arial", 16, "bold"))
     
     screen.update()
@@ -287,7 +288,7 @@ def rect_collision(hero_x, hero_y, rect_x, rect_y, rect_w, rect_h, hero_radius=1
 
 def check_collision():
     """Проверяет столкновения"""
-    global penalties
+    global penalties, lifes
     for ox, oy, (w, h) in impassable_obstacles:
         if rect_collision(hero.xcor(), hero.ycor(), ox, oy, w, h, hero_radius=15):
             penalties += 10
@@ -298,6 +299,11 @@ def check_collision():
     for obs in dynamic_obstacles:
         x, y, w, h, is_falling, speed, final_y = obs
         if rect_collision(hero.xcor(), hero.ycor(), x, y, w, h, hero_radius=15):
+            lifes -= 1
+            print(f"⚠️ БОЛЬ! (-1 жизнь)")
+            hero.goto(hero.xcor() - vx*3, hero.ycor() - vy*3)
+            return "ok"
+        elif lifes <= 0:
             return "game_over"
     
     return "ok"
@@ -421,6 +427,7 @@ while True:
         print("🎯 Reached B! RETURN TO A!")
         print(f"🟢 Теперь будут появляться препятствия!")
         going_forward = False
+        hero.color('yellow')
         
         log.append({
             "event": "reached_goal_B",
