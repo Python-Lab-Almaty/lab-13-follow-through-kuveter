@@ -4,11 +4,13 @@ import time
 import hashlib
 import os
 import json
+import pygame
 
 # ----------------------------
 # 🟢 КОНСТАНТЫ
 # ----------------------------
 WIDTH, HEIGHT = 1400, 900
+pygame.mixer.init()
 
 # 🟢 ИНИЦИАЛИЗАЦИЯ ЛОГА
 log = []
@@ -188,6 +190,7 @@ def draw_field_markers():
     marker.goto(goal[0], goal[1] - 50)
     marker.write("B (Finish)", align="center", font=("Arial", 16, "bold"))
     
+
     marker.goto(0, HEIGHT//2 - 60)
     marker.write(f"Student: {student_name}", align="center", font=("Arial", 14, "italic"))
 
@@ -428,7 +431,9 @@ while True:
         print(f"🟢 Теперь будут появляться препятствия!")
         going_forward = False
         hero.color('yellow')
-        
+        my_sound = pygame.mixer.Sound("beep.wav")
+        my_sound.play()
+
         log.append({
             "event": "reached_goal_B",
             "x": hero.xcor(),
