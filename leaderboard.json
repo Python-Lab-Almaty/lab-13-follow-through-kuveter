@@ -1,5 +1,13 @@
 [
   {
+    "name": "eldar1",
+    "score": 1178,
+    "time": 87.72,
+    "steps": 1178,
+    "penalties": 0,
+    "date": "2026-05-13 13:15:08"
+  },
+  {
     "name": "eldar",
     "score": 1153,
     "time": 37.54,

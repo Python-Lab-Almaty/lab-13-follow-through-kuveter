@@ -239,6 +239,13 @@ penalties = 0
 lifes = 3
 
 # ----------------------------
+# 🟢 TIMER DRAWER
+# ----------------------------
+timer_drawer = turtle.Turtle()
+timer_drawer.hideturtle()
+timer_drawer.penup()
+
+# ----------------------------
 # 🟢 СКОРОСТЬ
 # ----------------------------
 vx = 3
@@ -335,6 +342,20 @@ def draw_leaderboard():
         )
 
         y -= 30
+def draw_timer():
+    timer_drawer.clear()
+
+    elapsed = time.time() - start_time
+
+    minutes = int(elapsed // 60)
+    seconds = int(elapsed % 60)
+
+    timer_drawer.goto(-WIDTH//2 + 40, HEIGHT//2 - 60)
+
+    timer_drawer.write(
+        f"⏱ Time: {minutes:02d}:{seconds:02d}",
+        font=("Arial", 16, "bold")
+    )
 
 def draw_all():
     """Рисует ВСЁ: статичные препятствия, динамические, героя, счёт"""
@@ -397,6 +418,7 @@ def draw_all():
     score_drawer.write(f"Steps: {steps} | Lifes: {lifes} | Penalties: {penalties} | Score: {score}",
                        align="center", font=("Arial", 16, "bold"))
     draw_leaderboard()
+    draw_timer()
     screen.update()
 
 def rect_collision(hero_x, hero_y, rect_x, rect_y, rect_w, rect_h, hero_radius=15):
