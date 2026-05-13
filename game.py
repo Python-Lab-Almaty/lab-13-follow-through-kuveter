@@ -10,7 +10,17 @@ import pygame
 # 🟢 КОНСТАНТЫ
 # ----------------------------
 WIDTH, HEIGHT = 1400, 900
-pygame.mixer.init()
+
+try:
+    # Пытаемся открыть настоящее аудио
+    pygame.mixer.init()
+    print("Аудио устройство найдено")
+except pygame.error:
+    # Если устройства нет — используем dummy
+    print("Нет аудиоустройства, включаем dummy")
+    os.environ["SDL_AUDIODRIVER"] = "dummy"
+
+    pygame.mixer.init()
 
 # 🟢 ИНИЦИАЛИЗАЦИЯ ЛОГА
 log = []
@@ -124,6 +134,68 @@ def save_log(reason="end"):
         print(f"❌ Ошибка сохранения лога: {e}")
 
 # ----------------------------
+# 🟢 LEADERBOARD TOP-3
+# ----------------------------
+LEADERBOARD_FILE = "leaderboard.json"
+
+
+def load_leaderboard():
+    if not os.path.exists(LEADERBOARD_FILE):
+        return []
+
+    try:
+        with open(LEADERBOARD_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return []
+
+
+def save_leaderboard(name, score, total_time, steps, penalties):
+    print("SAVE PATH:", os.path.abspath(LEADERBOARD_FILE))
+
+    leaderboard = load_leaderboard()
+
+    leaderboard.append({
+        "name": name,
+        "score": score,
+        "time": round(total_time, 2),
+        "steps": steps,
+        "penalties": penalties,
+        "date": time.strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+    leaderboard.sort(
+        key=lambda x: x["score"],
+        reverse=True
+    )
+
+    leaderboard = leaderboard[:3]
+
+    with open(LEADERBOARD_FILE, "w", encoding="utf-8") as f:
+        json.dump(
+            leaderboard,
+            f,
+            indent=2,
+            ensure_ascii=False
+        )
+
+
+def show_leaderboard():
+    leaderboard = load_leaderboard()
+
+    print("\n🏆 TOP-3 RECORDS 🏆")
+
+    if not leaderboard:
+        print("Нет рекордов")
+        return
+
+    for i, player in enumerate(leaderboard, start=1):
+        print(
+            f"{i}. {player['name']} "
+            f"| Score: {player['score']} "
+            f"| Time: {player['time']}s"
+        )
+# ----------------------------
 # 🟢 ИНИЦИАЛИЗАЦИЯ ИГРЫ
 # ----------------------------
 student_name = get_student_name()
@@ -153,6 +225,12 @@ hero.shapesize(2, 2)
 # ----------------------------
 dynamic_obstacles = []
 
+# ----------------------------
+# 🟢 LEADERBOARD DRAWER
+# ----------------------------
+leaderboard_drawer = turtle.Turtle()
+leaderboard_drawer.hideturtle()
+leaderboard_drawer.penup()
 # ----------------------------
 # 🟢 СЧЁТ
 # ----------------------------
@@ -217,6 +295,47 @@ def spawn_dynamic_obstacle():
     
     dynamic_obstacles.append([x, y, size[0], size[1], True, fall_speed, final_y])
 
+def draw_leaderboard():
+    leaderboard_drawer.clear()
+
+    leaderboard = load_leaderboard()
+
+    x = WIDTH // 2 - 320
+    y = HEIGHT // 2 - 120
+
+    leaderboard_drawer.goto(x, y)
+
+    leaderboard_drawer.write(
+        "🏆 TOP-3 RECORDS",
+        font=("Arial", 16, "bold")
+    )
+
+    y -= 40
+
+    if not leaderboard:
+        leaderboard_drawer.goto(x, y)
+        leaderboard_drawer.write(
+            "No records yet",
+            font=("Arial", 12, "normal")
+        )
+        return
+
+    for i, player in enumerate(leaderboard, start=1):
+
+        leaderboard_drawer.goto(x, y)
+
+        text = (
+            f"{i}. {player['name']} | "
+            f"{player['score']}"
+        )
+
+        leaderboard_drawer.write(
+            text,
+            font=("Arial", 12, "normal")
+        )
+
+        y -= 30
+
 def draw_all():
     """Рисует ВСЁ: статичные препятствия, динамические, героя, счёт"""
     if hasattr(draw_all, 'dynamic_drawers'):
@@ -277,7 +396,7 @@ def draw_all():
     score_drawer.clear()
     score_drawer.write(f"Steps: {steps} | Lifes: {lifes} | Penalties: {penalties} | Score: {score}",
                        align="center", font=("Arial", 16, "bold"))
-    
+    draw_leaderboard()
     screen.update()
 
 def rect_collision(hero_x, hero_y, rect_x, rect_y, rect_w, rect_h, hero_radius=15):
@@ -451,6 +570,15 @@ while True:
         print(f"⚠️ Penalties: {penalties}")
         print(f"📊 Final Score: {final_score}")
         print(f"🟩 Препятствий появилось: {obstacles_spawned_count}")
+        save_leaderboard(
+            student_name,
+            final_score,
+            total_time,
+            steps,
+            penalties
+        )
+
+        show_leaderboard()
         
         log.append({
             "event": "mission_complete",
